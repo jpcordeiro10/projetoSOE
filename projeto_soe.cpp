@@ -62,6 +62,7 @@ int cadeado;
 std::vector<std::string> vetorDeStrings;
 std::vector<std::string> vetorMatriculas; // Vetor para gravar todas as matriculas
 string matricula;
+string matriculaParaRelatorio;
 std::thread chamadaThread;
 
 
@@ -318,10 +319,67 @@ void deletarAluno(TgBot::Bot& bot, TgBot::Message::Ptr message) {
     printf("deletar aluno\n");
     bot.getApi().sendMessage(message->chat->id, "Deletar Aluno:");
 }
-
+/*
+ *  gerarRelatorio() irá contar a qtde de 1 e 0 que aparece na linha de cada aluno 
+ *  para fazer um relatorio com base no criterio de 75% de presenças para dizer se o aluno
+ *  esta aprovado ou reprovado
+*/
 void gerarRelatorio(TgBot::Bot& bot, TgBot::Message::Ptr message) {
-    printf("relatorio\n");
+    cout << "Gerar relatorio";
     bot.getApi().sendMessage(message->chat->id, "Relatorio:");
+    //  Abrir o arquivo como leitura
+    ifstream file("alunos.csv");
+    
+    if (!file.is_open()) {
+        cerr << "Erro ao abrir o arquivo." << endl;
+        return;
+    }
+    string linhaParaRelatorio;
+    while (getline(file, linhaParaRelatorio)) {
+        // Realize alguma operação na linha (substituição, manipulação, etc.)
+        // Aqui, vou apenas adicionar um prefixo "Modificado: " à linha
+        // cout << linha + '\n';
+        // arquivoEntrada.get(caractere);
+        // cout << caractere;
+        int j = 0;
+        int contPresenca = 0, contFalta = 0, contTotal = 0;
+        float percentual = 0;
+        for (size_t i = 0; i < linhaParaRelatorio.size(); ++i) {
+            char caractere = linhaParaRelatorio[i];
+            
+            // Aqui você pode fazer o que quiser com o caractere
+            // cout << caractere;
+            if (j == 1 && isdigit(caractere)){
+                matriculaParaRelatorio += caractere;
+            } 
+            if (j > 2 && isdigit(caractere)){
+                // Valor de ASCII para 1 é 49
+                if (caractere == 49){
+                    contPresenca++;
+                    contTotal++;
+                    // Valor de ASCII para 0 é 48
+                } else if (caractere == 48){
+                    contFalta++;
+                    contTotal++;
+                }
+            } 
+            if (caractere == ','){
+                // cout << "Caracter = , \n";
+                j++;
+            }
+            cout << "Valor de j:" << j << endl;
+        }
+        percentual = (static_cast<float>(contPresenca)) / (static_cast<float>(contTotal));
+        percentual = percentual * 100;
+        cout << percentual << endl;
+        cout << contPresenca << endl;
+        cout << contTotal << endl;
+        string percentualString;
+        percentualString = to_string(percentual);
+        bot.getApi().sendMessage(message->chat->id, "O aluno " + matriculaParaRelatorio + " possui percetual de presenças de " + percentualString + "%");
+        matriculaParaRelatorio.clear();
+        
+    }
 }
 
 bool matriculaExiste(const std::string& matricula) {
@@ -355,13 +413,12 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
         // Mapeia comandos para opções do menu
         if (command == "cadastrarAluno") {
             cadastraAluno(bot, message);
-        } else if (command == "listarPessoas"){
+        } else if (command == "listarAlunos"){
             listarPessoas(bot, message);
         }else if (command == "iniciarChamada") {
             iniciarChamada(bot, message);
         } else if (command == "encerrarChamada"){
             finalizarChamada();
-            
         } else if (command == "cadastrarAula") {
             cadastrarAula(bot, message);
         } else if (command == "deletarAluno") {
@@ -483,11 +540,14 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
 
 // Função para criar um menu inline
 void sendInlineKeyboard(TgBot::Bot& bot, TgBot::Message::Ptr message) {
-    bot.getApi().sendMessage(message->chat->id, "1) Cadastrar Aluno -> /cadastrarAluno"); 
-    bot.getApi().sendMessage(message->chat->id, "2) Iniciar Chamada -> /iniciarChamada");  
-    bot.getApi().sendMessage(message->chat->id, "3) Cadastrar Aula -> /cadastrarAula");  
-    bot.getApi().sendMessage(message->chat->id, "4) Deletar aluno -> /deletarAluno");
-    bot.getApi().sendMessage(message->chat->id, "5) Gerar Relatorio -> /gerarRelatorio");     
+    bot.getApi().sendMessage(message->chat->id, "1) Cadastrar Aluno -> /cadastrarAluno (x)");
+    bot.getApi().sendMessage(message->chat->id, "2) Listar Alunos -> /listarAlunos (x)"); 
+    bot.getApi().sendMessage(message->chat->id, "3) Iniciar Chamada -> /iniciarChamada (x)");  
+    bot.getApi().sendMessage(message->chat->id, "4) Encerrar Chamada -> /encerrarChamada (x)");
+    bot.getApi().sendMessage(message->chat->id, "5) Gerar Relatorio -> /gerarRelatorio  (x)");   
+    bot.getApi().sendMessage(message->chat->id, "6) Cadastrar Aula -> /cadastrarAula");  
+    bot.getApi().sendMessage(message->chat->id, "7) Deletar aluno -> /deletarAluno");
+    // bot.getApi().sendMessage(message->chat->id, "8) Gerar Relatorio -> /gerarRelatorio");     
     // Crie uma mensagem com o teclado inline
     bot.getApi().sendMessage(message->chat->id, "Escolha uma opção:");
 }
