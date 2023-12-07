@@ -57,6 +57,7 @@ bool flagString = false;
 bool cabecalho = false;
 bool arquivoExiste = true;
 bool presente;
+int cadeado;
 
 std::vector<std::string> vetorDeStrings;
 std::vector<std::string> vetorMatriculas; // Vetor para gravar todas as matriculas
@@ -184,13 +185,6 @@ void* leituraQRCode(void* dummy_ptr){
     // return NULL;
     prepararRelatorio();
     cout << "Chamada Encerrada";
-    // Comentar no projeto final 
-    std::cout << "Vetor de Strings:" << std::endl;
-    for (const std::string& str : vetorDeStrings) {
-        std::cout << str << std::endl;
-    }
-    // --------------------------------------
-
 }
 
 void prepararRelatorio(){
@@ -258,10 +252,12 @@ void prepararRelatorio(){
         linhaModificada.clear();
 
         for (size_t p = 0; p < vetorDeStrings.size(); p++){
+            cadeado = 0;
             for (size_t q = 0; q < vetorMatriculas.size(); q++){
-                if (vetorDeStrings == vetorMatriculas){
+                if (vetorDeStrings[p] == vetorMatriculas[q]){
                     presente = true;
-                } else{
+                    cadeado = 1;
+                } else if (!cadeado){
                     presente = false;
                 }
             }
@@ -281,6 +277,20 @@ void prepararRelatorio(){
         }
     }
 
+    // Comentar no projeto final 
+    std::cout << "Vetor de Strings:" << std::endl;
+    for (const std::string& str : vetorDeStrings) {
+        std::cout << str << std::endl;
+    }
+    cout << '\n';
+    // Comentar no projeto final 
+    std::cout << "Vetor de Matriculas:" << std::endl;
+    for (const std::string& str : vetorMatriculas) {
+        std::cout << str << std::endl;
+    }
+    cout << '\n';
+    // --------------------------------------
+    // --------------------------------------
     arquivoEntrada.close();
     arquivoSaida.close();
 
@@ -294,6 +304,7 @@ void prepararRelatorio(){
 }
 void finalizarChamada() {
     chamadaAtiva = false;
+    system("cat alunos.csv");
 }
 
 void cadastrarAula(TgBot::Bot& bot, TgBot::Message::Ptr message) {
