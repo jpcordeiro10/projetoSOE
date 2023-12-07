@@ -56,9 +56,11 @@ bool chamadaAtiva = false;
 bool flagString = false;
 bool cabecalho = false;
 bool arquivoExiste = true;
+bool presente;
 
 std::vector<std::string> vetorDeStrings;
-
+std::vector<std::string> vetorMatriculas; // Vetor para gravar todas as matriculas
+string matricula;
 std::thread chamadaThread;
 
 
@@ -211,34 +213,87 @@ void prepararRelatorio(){
     // Imprimindo a string da data
     std::cout << "Data: " << dataString << std::endl;
 
-    // Preparacao do arquivo
-    std::fstream arquivo("alunos_relatorio.csv", std::ios::in | std::ios::out | std::ios::app);
-
-    if (!arquivo.is_open()) {
-        std::cerr << "Erro ao abrir o arquivo." << std::endl;
+    // Abre o arquivo database de alunos para copiar em arquivo auxiliar
+    ifstream arquivoEntrada("alunos.csv"); // Database principal
+    ofstream arquivoSaida("novo_exemplo.txt"); // Arquivo auxiliar para relatorio
+    
+    // Realiza a verificação padrão de abertura de arquivo
+    if (!arquivoEntrada.is_open() || !arquivoSaida.is_open()) {
+        cerr << "Erro ao abrir os arquivos." << endl;
         return;
     }
 
-    std::string primeiraLinha;
-    std::getline(arquivo, primeiraLinha);
+    string linha; // Declara string linha p/ ler a linha completa do arquivo
+    int k = 0;
+    while (getline(arquivoEntrada, linha)) {
+        // Realize alguma operação na linha (substituição, manipulação, etc.)
+        // Aqui, vou apenas adicionar um prefixo "Modificado: " à linha
+        // cout << linha + '\n';
+        // arquivoEntrada.get(caractere);
+        // cout << caractere;
+        int j = 0;
+        
+        for (size_t i = 0; i < linha.size(); ++i) {
+            char caractere = linha[i];
+            
+            // Aqui você pode fazer o que quiser com o caractere
+            // cout << caractere;
+            
+            if (j == 1 && isdigit(caractere)){
+                matricula += caractere;
+            } 
+            if (caractere == ','){
+                // cout << "Caracter = , \n";
+                j++;
+            }
+        }
+        // vetorMatriculas[k] << matricula;
+        vetorMatriculas.push_back(matricula);
+        k++;
+        // cout << "Matricula: " << matricula << endl;
+        matricula.clear();   
 
-    // Modifique a primeira linha conforme necessário
-    primeiraLinha += "," + dataString;
+        // Comparar vetorMatriculas com vetorDeStrings
+        string linhaModificada;
+        linhaModificada.clear();
 
-    // Move o ponteiro de arquivo para o início do arquivo
-    arquivo.seekp(0, std::ios::beg);
+        for (size_t p = 0; p < vetorDeStrings.size(); p++){
+            for (size_t q = 0; q < vetorMatriculas.size(); q++){
+                if (vetorDeStrings == vetorMatriculas){
+                    presente = true;
+                } else{
+                    presente = false;
+                }
+            }
+        }
 
-    // Escreve a nova primeira linha no arquivo
-    arquivo << primeiraLinha << std::endl;
+        cout << "Presença: " << presente << endl;
+        // Se o código encontrar recorrêcia da matrícula lida do arquivo na matricula lida na câmera então marca 
+        // presença para o aluno, se não, marca falta
+        if (presente){
+            linhaModificada += linha + ',' + '1'; // 1 representa presença
+            // Escreva a linha modificada no arquivo de saída
+            arquivoSaida << linhaModificada << endl;
+        } else {
+            linhaModificada += linha + ',' + '0'; // 0 representa falta 
+            // Escreva a linha modificada no arquivo de saída
+            arquivoSaida << linhaModificada << endl;
+        }
+    }
 
-    arquivo.close();
+    arquivoEntrada.close();
+    arquivoSaida.close();
+
+    // Renomeie o arquivo de saída para o nome do arquivo original
+    if (rename("novo_exemplo.txt", "alunos.csv") != 0) {
+        cerr << "Erro ao renomear o arquivo." << endl;
+        return;
+    }
+
+    
 }
 void finalizarChamada() {
     chamadaAtiva = false;
-    // if (chamadaThread.joinable()) {
-    //     chamadaThread.join();
-    //     printf("Chamada encerrada\n");
-    // }
 }
 
 void cadastrarAula(TgBot::Bot& bot, TgBot::Message::Ptr message) {
@@ -325,11 +380,6 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
             }
 
             case CADASTRAR_MATRICULA:{
-            // Aluno aluno; // Remova essa linha
-            // aluno.matricula = message->text; // Remova essa linha
-
-            // Agora use string_nome para o nome do aluno
-            // e message->text para a matrícula
             Aluno aluno;
             aluno.nome = string_nome;
             aluno.matricula = message->text;
@@ -348,34 +398,11 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
                 return;
             }
 
-            // // Nome do arquivo CSV
-            // const char* arquivoCSV = "alunos.csv";
-            // tenta abrir o arquivo CSV para leitura
-            std::ifstream arquivo_leitura("alunos.csv");
-
-            // Verificar se o arquivo foi aberto corretamente
-            if (!arquivo_leitura.is_open()) {
-                std::cerr << "Erro ao abrir o arquivo CSV." << std::endl;
-                arquivoExiste = false;
-             // Se não conseguir abrir o arquivo logo ele não existe;
-            } 
-
-            arquivo_leitura.close();
-
             ofstream arquivo("alunos.csv", ios::app);  // ios::app para adicionar ao final do arquivo
             
-            // if (!cabecalho){
-            //     arquivo << "Dont Care, Data: " << end1;
-            //     cabecalho = true;
-            // }
-
-            // Verificando se o arquivo foi aberto com sucesso
+            
             if (arquivo.is_open()) {
-                if (!arquivoExiste){
-                    arquivo << "Naoimporta" << "," << "Data" << "," << endl;
-                    arquivoExiste = true;
-                }
-                // Escrevendo no arquivo CSV
+            
                 arquivo << aluno.nome << "," << aluno.matricula << endl;
 
                 // Fechando o arquivo
@@ -399,25 +426,6 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
                 return;
             }
 
-            // Abrir o arquivo de destino para escrita
-            std::ofstream arquivoSaida(arquivoDestino);
-
-            // Verificar se o arquivo de destino foi aberto corretamente
-            if (!arquivoSaida.is_open()) {
-                std::cerr << "Erro ao abrir o arquivo de destino." << std::endl;
-                return;
-            }
-
-            // Ler e escrever o conteúdo do arquivo
-            arquivoSaida << arquivoEntrada.rdbuf();
-
-            // Fechar os arquivos
-            arquivoEntrada.close();
-            arquivoSaida.close();
-
-            std::cout << "Arquivo .csv copiado com sucesso." << std::endl;
-
-                
                 executarComando = CONCLUIDO;
             break;
             }
