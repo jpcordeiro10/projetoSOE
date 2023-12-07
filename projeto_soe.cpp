@@ -184,6 +184,8 @@ void* leituraQRCode(void* dummy_ptr){
     destroyAllWindows();
     // return NULL;
     prepararRelatorio();
+    vetorMatriculas.clear();
+    vetorDeStrings.clear();
     cout << "Chamada Encerrada";
 }
 
@@ -251,10 +253,10 @@ void prepararRelatorio(){
         string linhaModificada;
         linhaModificada.clear();
 
-        for (size_t p = 0; p < vetorDeStrings.size(); p++){
+        for (size_t p = 0; p < vetorMatriculas.size(); p++){
             cadeado = 0;
-            for (size_t q = 0; q < vetorMatriculas.size(); q++){
-                if (vetorDeStrings[p] == vetorMatriculas[q]){
+            for (size_t q = 0; q < vetorDeStrings.size(); q++){
+                if (vetorDeStrings[q] == vetorMatriculas[p]){
                     presente = true;
                     cadeado = 1;
                 } else if (!cadeado){
