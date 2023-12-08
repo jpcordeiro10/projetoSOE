@@ -5,20 +5,13 @@
 #include <sstream>
 #include <opencv2/opencv.hpp>
 #include <zbar.h>
-#include <chrono> // Adicione esta linha para usar std::this_thread::sleep_for
+#include <chrono>
 #include <thread>
 #include <atomic>
 #include <future>
-// #include <ctime>
 #include <iomanip>
 #include <pthread.h>
-// #include <stdio.h>
-// #include <unistd.h>
 #include <thread>
-
-
-#define LOCK 0
-#define UNLOCK 1
 
 using namespace cv;
 using namespace std;
@@ -27,27 +20,11 @@ using namespace zbar;
 
 // typedef struct struct_aluno ALUNO;
 struct Aluno {
-    std::string nome;
-    std::string matricula;
-    // char nome[100]; 
-    // char matricula[100];
-};
-char string_nome[100];
-char string_mat[100];
-
-TgBot::Bot bot("6423547833:AAE9xw6eJC2fz9X82MpAmW0WbUxAhzaAmU8");  // Substitua "SEU_TOKEN" pelo token do seu bot
-
-/*
-enum EstadoCadastro {
-    AGUARDANDO_NOME,
-    AGUARDANDO_MATRICULA,
-    CONCLUIDO
+    string nome;
+    string matricula;
 };
 
-int opcao = 0;
-
-EstadoCadastro estadoCadastro = AGUARDANDO_NOME;
-*/
+TgBot::Bot bot("6423547833:AAE9xw6eJC2fz9X82MpAmW0WbUxAhzaAmU8");  
 
 std::atomic<bool> continuarExecucao(true);
 
@@ -58,13 +35,11 @@ bool cabecalho = false;
 bool arquivoExiste = true;
 bool presente;
 int cadeado;
-
-std::vector<std::string> vetorDeStrings;
-std::vector<std::string> vetorMatriculas; // Vetor para gravar todas as matriculas
+char string_nome[100];
+vector<string> vetorDeStrings; 
+vector<string> vetorMatriculas; 
 string matricula;
 string matriculaParaRelatorio;
-std::thread chamadaThread;
-
 
 enum ExecutarComando {
     INICIO_CODIGO,
@@ -92,8 +67,6 @@ void prepararRelatorio();
 
 // Função para cadastrar um aluno
 void cadastraAluno(TgBot::Bot& bot, TgBot::Message::Ptr message) {
-    printf("Cadastra aluno\n"); // Debug
-
     executarComando = CADASTRAR_NOME;
     bot.getApi().sendMessage(message->chat->id, "Digite o nome do aluno:");
 }
@@ -101,18 +74,13 @@ void cadastraAluno(TgBot::Bot& bot, TgBot::Message::Ptr message) {
 void listarPessoas(TgBot::Bot& bot, TgBot::Message::Ptr message) {
     printf("Listar pessoas\n");
     bot.getApi().sendMessage(message->chat->id, "Envie qualquer mensagem para listar pessoas:");
-    // sleep(1);
-    executarComando = FAZER_LISTA;
-    
+    executarComando = FAZER_LISTA;  
 }
 void iniciarChamada(TgBot::Bot& bot, TgBot::Message::Ptr message) {
     printf("Iniciar Chamada\n");
     executarComando = FAZER_CHAMADA;
-    
     pthread_t thread_id1;
-    pthread_create(&thread_id1, NULL, &leituraQRCode, NULL);
-    // leituraQRCode();
-    
+    pthread_create(&thread_id1, NULL, &leituraQRCode, NULL);  
 }
 
 void* leituraQRCode(void* dummy_ptr){
@@ -121,22 +89,15 @@ void* leituraQRCode(void* dummy_ptr){
     VideoCapture cap(0);
     if (!cap.isOpened()) {
         cerr << "Erro ao abrir a câmera!" << endl;
-        // return NULL;
-        
     }
     cout << chamadaAtiva;
     // Inicializa o leitor ZBar
     ImageScanner scanner;
     scanner.set_config(ZBAR_NONE, ZBAR_CFG_ENABLE, 1);
-        // Coloque o código da chamada da câmera aqui
-    
-    
-
     while(chamadaAtiva){
     // Captura um frame da câmera
         Mat frame;
         cap >> frame;
-
         // Converte o frame para escala de cinza
         Mat gray;
         cvtColor(frame, gray, COLOR_BGR2GRAY);
@@ -151,10 +112,7 @@ void* leituraQRCode(void* dummy_ptr){
         for (Image::SymbolIterator symbol = image.symbol_begin(); symbol != image.symbol_end(); ++symbol) {
             // Imprime o valor do código de barras
             cout << "Código de Barras: " << symbol->get_data() << endl;
-            
-            // Você pode armazenar o valor em uma string aqui
             string codigoDeBarras = symbol->get_data();
-
             flagString = false;
 
             for (const std::string& str : vetorDeStrings) {
@@ -168,12 +126,7 @@ void* leituraQRCode(void* dummy_ptr){
                 vetorDeStrings.push_back(codigoDeBarras);
             }
         }
-
-        // Exibe o frame original com a marcação do código de barras
         imshow("Câmera", frame);
-        // std::cout << "Encerrar chamada: " << std::boolalpha << encerrarChamada << std::endl;
-        // std::cout << "Chamada ativa: " << std::boolalpha << chamadaAtiva << std::endl;
-        // Verifica se a tecla 'q' foi pressionada para sair do loop
         if (waitKey(1) == 'q' || encerrarChamada) {
             chamadaAtiva = false;
             break;
@@ -183,7 +136,6 @@ void* leituraQRCode(void* dummy_ptr){
     // Libera os recursos
     cap.release();
     destroyAllWindows();
-    // return NULL;
     prepararRelatorio();
     vetorMatriculas.clear();
     vetorDeStrings.clear();
@@ -223,19 +175,11 @@ void prepararRelatorio(){
     string linha; // Declara string linha p/ ler a linha completa do arquivo
     int k = 0;
     while (getline(arquivoEntrada, linha)) {
-        // Realize alguma operação na linha (substituição, manipulação, etc.)
-        // Aqui, vou apenas adicionar um prefixo "Modificado: " à linha
-        // cout << linha + '\n';
-        // arquivoEntrada.get(caractere);
-        // cout << caractere;
         int j = 0;
         
         for (size_t i = 0; i < linha.size(); ++i) {
             char caractere = linha[i];
-            
-            // Aqui você pode fazer o que quiser com o caractere
-            // cout << caractere;
-            
+        
             if (j == 1 && isdigit(caractere)){
                 matricula += caractere;
             } 
@@ -346,13 +290,12 @@ void gerarRelatorio(TgBot::Bot& bot, TgBot::Message::Ptr message) {
         float percentual = 0;
         for (size_t i = 0; i < linhaParaRelatorio.size(); ++i) {
             char caractere = linhaParaRelatorio[i];
-            
             // Aqui você pode fazer o que quiser com o caractere
             // cout << caractere;
             if (j == 1 && isdigit(caractere)){
                 matriculaParaRelatorio += caractere;
             } 
-            if (j > 2 && isdigit(caractere)){
+            if (j >= 2 && isdigit(caractere)){
                 // Valor de ASCII para 1 é 49
                 if (caractere == 49){
                     contPresenca++;
@@ -377,21 +320,19 @@ void gerarRelatorio(TgBot::Bot& bot, TgBot::Message::Ptr message) {
         string percentualString;
         percentualString = to_string(percentual);
         bot.getApi().sendMessage(message->chat->id, "O aluno " + matriculaParaRelatorio + " possui percetual de presenças de " + percentualString + "%");
-        matriculaParaRelatorio.clear();
-        
+        matriculaParaRelatorio.clear();   
     }
 }
 
 bool matriculaExiste(const std::string& matricula) {
-    std::ifstream arquivo("alunos.csv");
-    std::string linha;
+    ifstream arquivo("alunos.csv");
+    string linha;
+    while (getline(arquivo, linha)) {
+        stringstream ss(linha);
+        string nome, matriculaExistente;
 
-    while (std::getline(arquivo, linha)) {
-        std::stringstream ss(linha);
-        std::string nome, matriculaExistente;
-
-        std::getline(ss, nome, ',');
-        std::getline(ss, matriculaExistente);
+        getline(ss, nome, ',');
+        getline(ss, matriculaExistente);
 
         if (matriculaExistente == matricula) {
             // A matrícula já existe no arquivo
@@ -408,8 +349,7 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
     // Verifica se a mensagem contém um comando
     if (!message->text.empty() && message->text[0] == '/') {
         // Extrai o comando sem a barra inicial '/'
-        std::string command = message->text.substr(1);
-
+        string command = message->text.substr(1);
         // Mapeia comandos para opções do menu
         if (command == "cadastrarAluno") {
             cadastraAluno(bot, message);
@@ -472,12 +412,9 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
             
             
             if (arquivo.is_open()) {
-            
                 arquivo << aluno.nome << "," << aluno.matricula << endl;
-
                 // Fechando o arquivo
                 arquivo.close();
-
                 cout << "Informações do aluno salvas com sucesso no arquivo alunos.csv." << endl;
             } else {
                 cout << "Erro ao abrir o arquivo alunos.csv." << endl;
@@ -488,11 +425,11 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
             const char* arquivoDestino = "alunos_relatorio.csv";
 
             // Abrir o arquivo de origem para leitura
-            std::ifstream arquivoEntrada(arquivoOrigem);
+            ifstream arquivoEntrada(arquivoOrigem);
 
             // Verificar se o arquivo de origem foi aberto corretamente
             if (!arquivoEntrada.is_open()) {
-                std::cerr << "Erro ao abrir o arquivo de origem." << std::endl;
+                cerr << "Erro ao abrir o arquivo de origem." << std::endl;
                 return;
             }
 
@@ -503,9 +440,7 @@ void handleMessages(TgBot::Bot& bot, TgBot::Message::Ptr message) {
             case FAZER_LISTA:{
                 Aluno aluno;
                 string linha;
-
                 cout << "Lista de Alunos:" << endl;
-
                 ifstream arquivo("alunos.csv");
 
                 // Verificando se o arquivo foi aberto com sucesso
@@ -554,13 +489,11 @@ void sendInlineKeyboard(TgBot::Bot& bot, TgBot::Message::Ptr message) {
 
 
 int main() {
-
     // pthread_t thread_id1;
     // Configura a função de callback para processar mensagens
     bot.getEvents().onAnyMessage([&bot](TgBot::Message::Ptr message) {
         handleMessages(bot, message);
     });
-
     // Inicia o loop para receber mensagens
     try {
         printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
@@ -573,6 +506,5 @@ int main() {
     } catch (TgBot::TgException& e) {
         printf("error: %s\n", e.what());
     }
-
     return 0;
 }
